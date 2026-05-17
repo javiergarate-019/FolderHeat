@@ -79,6 +79,28 @@ public sealed class FolderCatalogServiceTests
     }
 
     [Fact]
+    public async Task RecentGroupBackfillsAfterRemovingFoldersAlreadyShownInActiveNow()
+    {
+        var repository = new InMemoryFolderRepository();
+        var clock = new FixedClock(new DateTimeOffset(2026, 5, 17, 12, 0, 0, TimeSpan.Zero));
+        var service = new FolderCatalogService(repository, clock, new CapturingFolderLauncher());
+
+        for (var index = 0; index < 10; index++)
+        {
+            await service.OpenFolderAsync($@"D:\Recent{index}");
+        }
+
+        var groups = await service.GetPopupGroupsAsync();
+
+        var recent = Assert.Single(groups, group => group.Title == "Recent");
+        Assert.NotEmpty(recent.Folders);
+        Assert.DoesNotContain(recent.Folders, folder => groups
+            .Single(group => group.Title == "Active Now")
+            .Folders
+            .Any(activeFolder => activeFolder.Path == folder.Path));
+    }
+
+    [Fact]
     public async Task IgnoredFoldersCanBeListedForManagement()
     {
         var repository = new InMemoryFolderRepository();

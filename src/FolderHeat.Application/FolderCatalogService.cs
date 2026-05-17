@@ -122,26 +122,26 @@ public sealed class FolderCatalogService
         var pinned = folders
             .Where(folder => folder.IsPinned)
             .OrderByDescending(folder => FolderHeatScore.Calculate(folder, clock.Now))
-            .Take(8)
             .Select(ToCandidate)
             .Where(folder => usedPaths.Add(folder.Path))
+            .Take(8)
             .ToArray();
 
         var recent = folders
             .Where(folder => folder.LastAccessedAt is not null)
             .OrderByDescending(folder => folder.LastAccessedAt)
-            .Take(8)
             .Select(ToCandidate)
             .Where(folder => usedPaths.Add(folder.Path))
+            .Take(8)
             .ToArray();
 
         var frequent = folders
             .Where(folder => folder.AccessCount > 0)
             .OrderByDescending(folder => folder.AccessCount)
             .ThenByDescending(folder => folder.LastAccessedAt)
-            .Take(8)
             .Select(ToCandidate)
             .Where(folder => usedPaths.Add(folder.Path))
+            .Take(8)
             .ToArray();
 
         return new[]
