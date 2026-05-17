@@ -16,11 +16,13 @@ internal sealed class PopupForm : Form
         this.catalog = catalog;
 
         Text = "FolderHeat";
-        Width = 620;
-        Height = 460;
+        Icon = AppIcons.FolderHeat;
+        Width = 760;
+        Height = 520;
+        MinimumSize = new Size(560, 360);
         StartPosition = FormStartPosition.Manual;
-        FormBorderStyle = FormBorderStyle.FixedSingle;
-        MaximizeBox = false;
+        FormBorderStyle = FormBorderStyle.Sizable;
+        MaximizeBox = true;
         MinimizeBox = false;
         ShowInTaskbar = false;
         KeyPreview = true;
@@ -42,18 +44,20 @@ internal sealed class PopupForm : Form
             HideSelection = false,
             MultiSelect = false,
         };
-        folderList.Columns.Add("Folder", 180);
-        folderList.Columns.Add("Path", 260);
+        folderList.Columns.Add("Folder", 190);
+        folderList.Columns.Add("Path", 360);
         folderList.Columns.Add("Heat", 70);
-        folderList.Columns.Add("Why", 80);
+        folderList.Columns.Add("Why", 90);
         folderList.DoubleClick += async (_, _) => await OpenSelectedAsync();
         folderList.KeyDown += FolderList_KeyDown;
+        folderList.Resize += (_, _) => ResizeColumns();
 
         var addButton = new Button
         {
             Text = "Add folder",
             AutoSize = true,
         };
+        ConfigureButton(addButton, UiIconKind.Add);
         addButton.Click += async (_, _) => await AddFolderAsync();
 
         pinButton = new Button
@@ -61,6 +65,7 @@ internal sealed class PopupForm : Form
             Text = "Pin",
             AutoSize = true,
         };
+        ConfigureButton(pinButton, UiIconKind.Pin);
         pinButton.Click += async (_, _) => await PinSelectedAsync();
 
         ignoreButton = new Button
@@ -68,6 +73,7 @@ internal sealed class PopupForm : Form
             Text = "Ignore",
             AutoSize = true,
         };
+        ConfigureButton(ignoreButton, UiIconKind.Ignore);
         ignoreButton.Click += async (_, _) => await IgnoreSelectedAsync();
         folderList.SelectedIndexChanged += (_, _) => UpdateSelectionButtons();
 
@@ -85,6 +91,8 @@ internal sealed class PopupForm : Form
         Controls.Add(folderList);
         Controls.Add(bottomPanel);
         Controls.Add(searchBox);
+
+        ResizeColumns();
 
         Deactivate += (_, _) => Hide();
         KeyDown += (_, e) =>
@@ -105,6 +113,7 @@ internal sealed class PopupForm : Form
         Top = Math.Min(Cursor.Position.Y, screen.Bottom - Height);
 
         Show();
+        ResizeColumns();
         Activate();
         searchBox.Focus();
         searchBox.SelectAll();
@@ -195,6 +204,7 @@ internal sealed class PopupForm : Form
         var selected = GetSelectedCandidate();
         pinButton.Enabled = selected is not null;
         pinButton.Text = selected?.IsPinned == true ? "Unpin" : "Pin";
+        pinButton.Image = UiIconFactory.Create(selected?.IsPinned == true ? UiIconKind.Unpin : UiIconKind.Pin);
         ignoreButton.Enabled = selected is not null;
     }
 
@@ -247,5 +257,29 @@ internal sealed class PopupForm : Form
         return query.Length == 0
             || folder.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
             || folder.Path.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ResizeColumns()
+    {
+        if (folderList.Columns.Count < 4)
+        {
+            return;
+        }
+
+        var availableWidth = Math.Max(480, folderList.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 8);
+        folderList.Columns[0].Width = Math.Max(160, (int)(availableWidth * 0.27));
+        folderList.Columns[2].Width = 70;
+        folderList.Columns[3].Width = 90;
+        folderList.Columns[1].Width = Math.Max(180, availableWidth - folderList.Columns[0].Width - folderList.Columns[2].Width - folderList.Columns[3].Width);
+    }
+
+    private static void ConfigureButton(Button button, UiIconKind iconKind)
+    {
+        button.Image = UiIconFactory.Create(iconKind);
+        button.ImageAlign = ContentAlignment.MiddleLeft;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        button.FlatStyle = FlatStyle.Standard;
+        button.Padding = new Padding(4, 0, 6, 0);
+        button.Height = 28;
     }
 }

@@ -11,6 +11,7 @@ internal sealed class SettingsForm : Form
     public SettingsForm(HotkeySettings settings)
     {
         Text = "FolderHeat settings";
+        Icon = AppIcons.FolderHeat;
         Width = 360;
         Height = 220;
         StartPosition = FormStartPosition.CenterScreen;
@@ -72,6 +73,7 @@ internal sealed class SettingsForm : Form
             AutoSize = true,
             DialogResult = DialogResult.OK,
         };
+        ConfigureButton(saveButton, UiIconKind.Settings);
         saveButton.Click += (_, _) =>
         {
             if (!ctrlBox.Checked && !altBox.Checked && !shiftBox.Checked && !winBox.Checked)
@@ -95,6 +97,7 @@ internal sealed class SettingsForm : Form
             AutoSize = true,
             DialogResult = DialogResult.Cancel,
         };
+        ConfigureButton(cancelButton, UiIconKind.Ignore);
 
         var bottomPanel = new FlowLayoutPanel
         {
@@ -145,5 +148,15 @@ internal sealed class SettingsForm : Form
             Key = keyBox.SelectedItem is Keys key ? key : Keys.Space,
             Modifiers = modifiers,
         };
+    }
+
+    private static void ConfigureButton(Button button, UiIconKind iconKind)
+    {
+        button.Image = UiIconFactory.Create(iconKind);
+        button.ImageAlign = ContentAlignment.MiddleLeft;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        button.FlatStyle = FlatStyle.Standard;
+        button.Padding = new Padding(4, 0, 6, 0);
+        button.Height = 28;
     }
 }

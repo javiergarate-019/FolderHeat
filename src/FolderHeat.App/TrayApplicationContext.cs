@@ -19,7 +19,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = AppIcons.FolderHeat,
             Text = $"FolderHeat ({hotkeySettings.DisplayText})",
             Visible = true,
             ContextMenuStrip = BuildContextMenu(),
@@ -44,11 +44,11 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private ContextMenuStrip BuildContextMenu()
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Open FolderHeat", null, (_, _) => ShowPopup());
-        menu.Items.Add("Add current folder", null, async (_, _) => await AddCurrentFolderAsync());
-        menu.Items.Add("Add folder...", null, async (_, _) => await AddFolderAsync());
-        menu.Items.Add("Ignored folders...", null, (_, _) => ShowIgnoredFolders());
-        menu.Items.Add("Settings...", null, (_, _) => ShowSettings());
+        menu.Items.Add(CreateMenuItem("Open FolderHeat", UiIconKind.Restore, (_, _) => ShowPopup()));
+        menu.Items.Add(CreateMenuItem("Add current folder", UiIconKind.Add, async (_, _) => await AddCurrentFolderAsync()));
+        menu.Items.Add(CreateMenuItem("Add folder...", UiIconKind.Add, async (_, _) => await AddFolderAsync()));
+        menu.Items.Add(CreateMenuItem("Ignored folders...", UiIconKind.Ignore, (_, _) => ShowIgnoredFolders()));
+        menu.Items.Add(CreateMenuItem("Settings...", UiIconKind.Settings, (_, _) => ShowSettings()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
         return menu;
@@ -130,5 +130,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
         configuredHotkey.Pressed += (_, _) => ShowPopup();
         configuredHotkey.Register();
         return configuredHotkey;
+    }
+
+    private static ToolStripMenuItem CreateMenuItem(string text, UiIconKind iconKind, EventHandler onClick)
+    {
+        var item = new ToolStripMenuItem(text, UiIconFactory.Create(iconKind));
+        item.Click += onClick;
+        return item;
     }
 }

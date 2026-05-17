@@ -13,11 +13,13 @@ internal sealed class IgnoredFoldersForm : Form
         this.catalog = catalog;
 
         Text = "Ignored folders";
+        Icon = AppIcons.FolderHeat;
         Width = 620;
         Height = 360;
+        MinimumSize = new Size(480, 300);
         StartPosition = FormStartPosition.CenterScreen;
         MinimizeBox = false;
-        MaximizeBox = false;
+        MaximizeBox = true;
 
         folderList = new ListView
         {
@@ -37,6 +39,7 @@ internal sealed class IgnoredFoldersForm : Form
             AutoSize = true,
             Enabled = false,
         };
+        ConfigureButton(restoreButton, UiIconKind.Restore);
         restoreButton.Click += async (_, _) => await RestoreSelectedAsync();
 
         var closeButton = new Button
@@ -44,6 +47,7 @@ internal sealed class IgnoredFoldersForm : Form
             Text = "Close",
             AutoSize = true,
         };
+        ConfigureButton(closeButton, UiIconKind.Ignore);
         closeButton.Click += (_, _) => Close();
 
         var bottomPanel = new FlowLayoutPanel
@@ -97,5 +101,15 @@ internal sealed class IgnoredFoldersForm : Form
     private void UpdateButtons()
     {
         restoreButton.Enabled = folderList.SelectedItems.Count > 0;
+    }
+
+    private static void ConfigureButton(Button button, UiIconKind iconKind)
+    {
+        button.Image = UiIconFactory.Create(iconKind);
+        button.ImageAlign = ContentAlignment.MiddleLeft;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        button.FlatStyle = FlatStyle.Standard;
+        button.Padding = new Padding(4, 0, 6, 0);
+        button.Height = 28;
     }
 }
