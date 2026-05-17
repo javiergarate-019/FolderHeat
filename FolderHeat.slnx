@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FolderHeat.App/FolderHeat.App.csproj" />
+    <Project Path="src/FolderHeat.Application/FolderHeat.Application.csproj" />
+    <Project Path="src/FolderHeat.Domain/FolderHeat.Domain.csproj" />
+    <Project Path="src/FolderHeat.Infrastructure/FolderHeat.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FolderHeat.Application.Tests/FolderHeat.Application.Tests.csproj" />
+    <Project Path="tests/FolderHeat.Domain.Tests/FolderHeat.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

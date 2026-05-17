@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+.vscode/
+
+*.user
+*.suo
+*.rsuser
+
+TestResults/
+coverage/
+
+*.db
+*.db-shm
+*.db-wal
+
+*.log
