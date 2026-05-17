@@ -15,3 +15,6 @@ coverage/
 *.db-wal
 
 *.log
+
+# Local AI agent instructions
+Agents.md
