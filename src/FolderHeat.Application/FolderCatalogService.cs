@@ -113,6 +113,7 @@ public sealed class FolderCatalogService
         var usedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var activeNow = folders
+            .Where(folder => IsActiveNowCandidate(folder, activePathSet, transitionPathSet))
             .OrderByDescending(folder => CalculateHeat(folder, activePathSet, transitionPathSet))
             .Take(8)
             .Select(folder => ToCandidate(folder, activePathSet, transitionPathSet))
@@ -128,8 +129,7 @@ public sealed class FolderCatalogService
             .ToArray();
 
         var recent = folders
-            .Where(folder => folder.LastAccessedAt is not null)
-            .OrderByDescending(folder => folder.LastAccessedAt)
+            .OrderByDescending(folder => folder.LastAccessedAt ?? folder.CreatedAt)
             .Select(ToCandidate)
             .Where(folder => usedPaths.Add(folder.Path))
             .Take(8)
@@ -185,6 +185,16 @@ public sealed class FolderCatalogService
         }
 
         return paths;
+    }
+
+    private static bool IsActiveNowCandidate(
+        FolderEntry folder,
+        IReadOnlySet<string> activePathSet,
+        IReadOnlySet<string> transitionPathSet)
+    {
+        return activePathSet.Contains(folder.Path)
+            || transitionPathSet.Contains(folder.Path)
+            || IsRelatedToActiveFolder(folder.Path, activePathSet);
     }
 
     private double CalculateHeat(

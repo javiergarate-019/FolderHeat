@@ -79,6 +79,24 @@ public sealed class FolderCatalogServiceTests
     }
 
     [Fact]
+    public async Task ActiveNowDoesNotConsumeOrdinaryRecentAndPinnedFolders()
+    {
+        var repository = new InMemoryFolderRepository();
+        var clock = new FixedClock(new DateTimeOffset(2026, 5, 17, 12, 0, 0, TimeSpan.Zero));
+        var service = new FolderCatalogService(repository, clock, new CapturingFolderLauncher());
+
+        await service.AddFolderAsync(@"D:\Pinned");
+        await service.PinFolderAsync(@"D:\Pinned", true);
+        await service.OpenFolderAsync(@"D:\Recent");
+
+        var groups = await service.GetPopupGroupsAsync();
+
+        Assert.Empty(groups.Single(group => group.Title == "Active Now").Folders);
+        Assert.Contains(groups.Single(group => group.Title == "Pinned").Folders, folder => folder.Path == @"D:\Pinned");
+        Assert.Contains(groups.Single(group => group.Title == "Recent").Folders, folder => folder.Path == @"D:\Recent");
+    }
+
+    [Fact]
     public async Task RecentGroupBackfillsAfterRemovingFoldersAlreadyShownInActiveNow()
     {
         var repository = new InMemoryFolderRepository();
