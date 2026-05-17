@@ -13,6 +13,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets\FolderHeat.ico</ApplicationIcon>
+    <GeneratePortableZip Condition="'$(GeneratePortableZip)' == ''">true</GeneratePortableZip>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,5 +22,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Target Name="GenerateFolderHeatPortableZip"
+          AfterTargets="Build"
+          Condition="'$(GeneratePortableZip)' == 'true' and '$(Configuration)' == 'Release'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\eng\package-portable.ps1&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
 
 </Project>

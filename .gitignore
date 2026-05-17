@@ -16,5 +16,7 @@ coverage/
 
 *.log
 
+artifacts/publish/
+
 # Local AI agent instructions
 Agents.md
