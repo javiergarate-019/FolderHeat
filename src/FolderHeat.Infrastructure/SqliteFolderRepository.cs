@@ -42,6 +42,13 @@ public sealed class SqliteFolderRepository : IFolderRepository
                 is_pinned INTEGER NOT NULL,
                 is_ignored INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS folder_transitions (
+                from_path TEXT NOT NULL,
+                to_path TEXT NOT NULL,
+                count INTEGER NOT NULL,
+                PRIMARY KEY (from_path, to_path)
+            );
             """;
 
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -110,6 +117,53 @@ public sealed class SqliteFolderRepository : IFolderRepository
         command.Parameters.AddWithValue("$is_ignored", folder.IsIgnored ? 1 : 0);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task RecordTransitionAsync(string fromPath, string toPath, CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO folder_transitions (from_path, to_path, count)
+            VALUES ($from_path, $to_path, 1)
+            ON CONFLICT(from_path, to_path) DO UPDATE SET
+                count = count + 1;
+            """;
+        command.Parameters.AddWithValue("$from_path", FolderEntry.NormalizePath(fromPath));
+        command.Parameters.AddWithValue("$to_path", FolderEntry.NormalizePath(toPath));
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FolderTransition>> GetTransitionTargetsAsync(
+        string fromPath,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT from_path, to_path, count
+            FROM folder_transitions
+            WHERE from_path = $from_path
+            ORDER BY count DESC, to_path ASC;
+            """;
+        command.Parameters.AddWithValue("$from_path", FolderEntry.NormalizePath(fromPath));
+
+        var transitions = new List<FolderTransition>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            transitions.Add(new FolderTransition(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt32(2)));
+        }
+
+        return transitions;
     }
 
     private SqliteConnection CreateConnection()

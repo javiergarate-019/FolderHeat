@@ -2,7 +2,7 @@
 
 FolderHeat is a lightweight Windows tray utility for launching the folders the user is most likely to need right now.
 
-This first implementation is the v0.1 foundation:
+This implementation includes the v0.3 smart-context foundation:
 
 - .NET 10 WinForms tray app.
 - Lightweight Clean Architecture projects.
@@ -12,6 +12,11 @@ This first implementation is the v0.1 foundation:
 - Manual folder add.
 - Open folder tracking.
 - Pin/unpin support.
+- Ignore/restore support.
+- Active context from Explorer, VS Code, Notepad++, and Windows recent shortcuts.
+- Duplicate-free popup groups with rank reasons.
+- Related-folder and likely-next-folder boosts.
+- Configurable global hotkey.
 
 ## Projects
 

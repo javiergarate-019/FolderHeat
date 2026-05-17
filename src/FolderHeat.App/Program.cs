@@ -16,8 +16,15 @@ static class Program
         var catalog = new FolderCatalogService(
             repository,
             new SystemClock(),
-            new WindowsFolderLauncher());
+            new WindowsFolderLauncher(),
+            new CompositeActiveFolderSource(
+                new ExplorerActiveFolderSource(),
+                new VsCodeActiveFolderSource(),
+                new NotepadPlusPlusActiveFolderSource(),
+                new WindowsRecentFolderSource()));
 
-        System.Windows.Forms.Application.Run(new TrayApplicationContext(catalog));
+        System.Windows.Forms.Application.Run(new TrayApplicationContext(
+            catalog,
+            new AppSettingsStore(AppPaths.SettingsPath)));
     }
 }

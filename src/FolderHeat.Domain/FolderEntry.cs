@@ -2,6 +2,8 @@ namespace FolderHeat.Domain;
 
 public sealed class FolderEntry
 {
+    private static readonly TimeSpan RepeatedAccessWindow = TimeSpan.FromMinutes(2);
+
     public FolderEntry(
         string path,
         DateTimeOffset createdAt,
@@ -46,6 +48,12 @@ public sealed class FolderEntry
 
     public void RecordAccess(DateTimeOffset when)
     {
+        if (LastAccessedAt is not null && when - LastAccessedAt.Value < RepeatedAccessWindow)
+        {
+            LastAccessedAt = when;
+            return;
+        }
+
         AccessCount++;
         LastAccessedAt = when;
     }

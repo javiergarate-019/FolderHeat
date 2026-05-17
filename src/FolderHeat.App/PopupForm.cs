@@ -7,6 +7,8 @@ internal sealed class PopupForm : Form
     private readonly FolderCatalogService catalog;
     private readonly TextBox searchBox;
     private readonly ListView folderList;
+    private readonly Button pinButton;
+    private readonly Button ignoreButton;
     private IReadOnlyList<FolderGroup> groups = Array.Empty<FolderGroup>();
 
     public PopupForm(FolderCatalogService catalog)
@@ -40,9 +42,10 @@ internal sealed class PopupForm : Form
             HideSelection = false,
             MultiSelect = false,
         };
-        folderList.Columns.Add("Folder", 220);
-        folderList.Columns.Add("Path", 300);
+        folderList.Columns.Add("Folder", 180);
+        folderList.Columns.Add("Path", 260);
         folderList.Columns.Add("Heat", 70);
+        folderList.Columns.Add("Why", 80);
         folderList.DoubleClick += async (_, _) => await OpenSelectedAsync();
         folderList.KeyDown += FolderList_KeyDown;
 
@@ -53,12 +56,20 @@ internal sealed class PopupForm : Form
         };
         addButton.Click += async (_, _) => await AddFolderAsync();
 
-        var pinButton = new Button
+        pinButton = new Button
         {
             Text = "Pin",
             AutoSize = true,
         };
         pinButton.Click += async (_, _) => await PinSelectedAsync();
+
+        ignoreButton = new Button
+        {
+            Text = "Ignore",
+            AutoSize = true,
+        };
+        ignoreButton.Click += async (_, _) => await IgnoreSelectedAsync();
+        folderList.SelectedIndexChanged += (_, _) => UpdateSelectionButtons();
 
         var bottomPanel = new FlowLayoutPanel
         {
@@ -68,6 +79,7 @@ internal sealed class PopupForm : Form
             Padding = new Padding(8),
         };
         bottomPanel.Controls.Add(addButton);
+        bottomPanel.Controls.Add(ignoreButton);
         bottomPanel.Controls.Add(pinButton);
 
         Controls.Add(folderList);
@@ -124,6 +136,7 @@ internal sealed class PopupForm : Form
                 };
                 item.SubItems.Add(folder.Path);
                 item.SubItems.Add(Math.Round(folder.Heat).ToString());
+                item.SubItems.Add(folder.RankReason);
                 folderList.Items.Add(item);
             }
         }
@@ -132,6 +145,8 @@ internal sealed class PopupForm : Form
         {
             folderList.Items[0].Selected = true;
         }
+
+        UpdateSelectionButtons();
 
         folderList.EndUpdate();
     }
@@ -161,6 +176,26 @@ internal sealed class PopupForm : Form
 
         await catalog.PinFolderAsync(selected.Path, !selected.IsPinned);
         RefreshFolders();
+    }
+
+    private async Task IgnoreSelectedAsync()
+    {
+        var selected = GetSelectedCandidate();
+        if (selected is null)
+        {
+            return;
+        }
+
+        await catalog.IgnoreFolderAsync(selected.Path, true);
+        RefreshFolders();
+    }
+
+    private void UpdateSelectionButtons()
+    {
+        var selected = GetSelectedCandidate();
+        pinButton.Enabled = selected is not null;
+        pinButton.Text = selected?.IsPinned == true ? "Unpin" : "Pin";
+        ignoreButton.Enabled = selected is not null;
     }
 
     private async Task OpenSelectedAsync()

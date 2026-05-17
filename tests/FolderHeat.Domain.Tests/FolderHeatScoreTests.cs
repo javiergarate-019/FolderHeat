@@ -25,4 +25,17 @@ public sealed class FolderHeatScoreTests
 
         Assert.Equal(double.NegativeInfinity, FolderHeatScore.Calculate(folder, now));
     }
+
+    [Fact]
+    public void RepeatedAccessInsideShortWindowDoesNotIncreaseFrequency()
+    {
+        var now = new DateTimeOffset(2026, 5, 17, 12, 0, 0, TimeSpan.Zero);
+        var folder = new FolderEntry(@"D:\Work", now);
+
+        folder.RecordAccess(now);
+        folder.RecordAccess(now.AddSeconds(30));
+
+        Assert.Equal(1, folder.AccessCount);
+        Assert.Equal(now.AddSeconds(30), folder.LastAccessedAt);
+    }
 }

@@ -6,4 +6,6 @@ public sealed record FolderCandidate(
     double Heat,
     int AccessCount,
     DateTimeOffset? LastAccessedAt,
-    bool IsPinned);
+    bool IsPinned,
+    bool IsActive,
+    string RankReason);

@@ -6,4 +6,6 @@ internal static class AppPaths
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FolderHeat");
 
     public static string DatabasePath => Path.Combine(DataDirectory, "folderheat.db");
+
+    public static string SettingsPath => Path.Combine(DataDirectory, "settings.json");
 }
