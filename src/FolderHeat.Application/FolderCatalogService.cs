@@ -114,6 +114,7 @@ public sealed class FolderCatalogService
 
         var activeNow = folders
             .Where(folder => IsActiveNowCandidate(folder, activePathSet, transitionPathSet))
+            .Where(folder => !folder.IsPinned)
             .OrderByDescending(folder => CalculateHeat(folder, activePathSet, transitionPathSet))
             .Take(8)
             .Select(folder => ToCandidate(folder, activePathSet, transitionPathSet))
