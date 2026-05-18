@@ -7,6 +7,9 @@ internal sealed class PopupForm : Form
     private readonly FolderCatalogService catalog;
     private readonly TextBox searchBox;
     private readonly ListView folderList;
+    private readonly Label emptyLabel;
+    private readonly ToolTip toolTip = new();
+    private readonly Button openButton;
     private readonly Button pinButton;
     private readonly Button ignoreButton;
     private IReadOnlyList<FolderGroup> groups = Array.Empty<FolderGroup>();
@@ -44,14 +47,32 @@ internal sealed class PopupForm : Form
             HideSelection = false,
             MultiSelect = false,
             ShowItemToolTips = true,
+            BorderStyle = BorderStyle.FixedSingle,
         };
         folderList.Columns.Add("Folder", 190);
-        folderList.Columns.Add("Path", 360);
-        folderList.Columns.Add("Heat", 70);
-        folderList.Columns.Add("Why", 90);
+        folderList.Columns.Add("Path", 430);
+        folderList.Columns.Add("Reason", 110);
         folderList.DoubleClick += async (_, _) => await OpenSelectedAsync();
         folderList.KeyDown += FolderList_KeyDown;
         folderList.Resize += (_, _) => ResizeColumns();
+
+        emptyLabel = new Label
+        {
+            Dock = DockStyle.Fill,
+            Text = "No folders to show",
+            TextAlign = ContentAlignment.MiddleCenter,
+            ForeColor = SystemColors.GrayText,
+            Visible = false,
+        };
+
+        openButton = new Button
+        {
+            Text = "Open",
+            AutoSize = true,
+        };
+        ConfigureButton(openButton, UiIconKind.Open);
+        openButton.Click += async (_, _) => await OpenSelectedAsync();
+        toolTip.SetToolTip(openButton, "Open selected folder");
 
         var addButton = new Button
         {
@@ -60,6 +81,7 @@ internal sealed class PopupForm : Form
         };
         ConfigureButton(addButton, UiIconKind.Add);
         addButton.Click += async (_, _) => await AddFolderAsync();
+        toolTip.SetToolTip(addButton, "Add a folder");
 
         pinButton = new Button
         {
@@ -68,6 +90,7 @@ internal sealed class PopupForm : Form
         };
         ConfigureButton(pinButton, UiIconKind.Pin);
         pinButton.Click += async (_, _) => await PinSelectedAsync();
+        toolTip.SetToolTip(pinButton, "Pin selected folder");
 
         ignoreButton = new Button
         {
@@ -76,6 +99,7 @@ internal sealed class PopupForm : Form
         };
         ConfigureButton(ignoreButton, UiIconKind.Ignore);
         ignoreButton.Click += async (_, _) => await IgnoreSelectedAsync();
+        toolTip.SetToolTip(ignoreButton, "Ignore selected folder");
         folderList.SelectedIndexChanged += (_, _) => UpdateSelectionButtons();
 
         var bottomPanel = new FlowLayoutPanel
@@ -88,8 +112,10 @@ internal sealed class PopupForm : Form
         bottomPanel.Controls.Add(addButton);
         bottomPanel.Controls.Add(ignoreButton);
         bottomPanel.Controls.Add(pinButton);
+        bottomPanel.Controls.Add(openButton);
 
         Controls.Add(folderList);
+        Controls.Add(emptyLabel);
         Controls.Add(bottomPanel);
         Controls.Add(searchBox);
 
@@ -101,6 +127,18 @@ internal sealed class PopupForm : Form
             if (e.KeyCode == Keys.Escape)
             {
                 Hide();
+            }
+
+            if (!searchBox.Focused && e.Control && e.KeyCode == Keys.P)
+            {
+                _ = PinSelectedAsync();
+                e.Handled = true;
+            }
+
+            if (!searchBox.Focused && e.KeyCode == Keys.Delete)
+            {
+                _ = IgnoreSelectedAsync();
+                e.Handled = true;
             }
         };
     }
@@ -135,19 +173,28 @@ internal sealed class PopupForm : Form
 
         foreach (var group in groups)
         {
-            var listGroup = new ListViewGroup(group.Title);
+            var matchingFolders = group.Folders
+                .Where(folder => Matches(folder, query))
+                .ToArray();
+
+            if (matchingFolders.Length == 0)
+            {
+                continue;
+            }
+
+            var listGroup = new ListViewGroup($"{group.Title.ToUpperInvariant()} ({matchingFolders.Length})");
             folderList.Groups.Add(listGroup);
 
-            foreach (var folder in group.Folders.Where(folder => Matches(folder, query)))
+            foreach (var folder in matchingFolders)
             {
+                var reason = GetReasonLabel(folder.RankReason);
                 var item = new ListViewItem(folder.Name, listGroup)
                 {
                     Tag = folder,
-                    ToolTipText = folder.Path,
+                    ToolTipText = $"{folder.Path}{Environment.NewLine}{GetReasonTooltip(folder.RankReason)}",
                 };
                 item.SubItems.Add(folder.Path);
-                item.SubItems.Add(Math.Round(folder.Heat).ToString());
-                item.SubItems.Add(folder.RankReason);
+                item.SubItems.Add(reason);
                 folderList.Items.Add(item);
             }
         }
@@ -158,6 +205,8 @@ internal sealed class PopupForm : Form
         }
 
         UpdateSelectionButtons();
+        emptyLabel.Visible = folderList.Items.Count == 0;
+        emptyLabel.BringToFront();
 
         folderList.EndUpdate();
     }
@@ -204,9 +253,11 @@ internal sealed class PopupForm : Form
     private void UpdateSelectionButtons()
     {
         var selected = GetSelectedCandidate();
+        openButton.Enabled = selected is not null;
         pinButton.Enabled = selected is not null;
         pinButton.Text = selected?.IsPinned == true ? "Unpin" : "Pin";
         pinButton.Image = UiIconFactory.Create(selected?.IsPinned == true ? UiIconKind.Unpin : UiIconKind.Pin);
+        toolTip.SetToolTip(pinButton, selected?.IsPinned == true ? "Unpin selected folder" : "Pin selected folder");
         ignoreButton.Enabled = selected is not null;
     }
 
@@ -252,6 +303,18 @@ internal sealed class PopupForm : Form
             _ = OpenSelectedAsync();
             e.Handled = true;
         }
+
+        if (e.Control && e.KeyCode == Keys.P)
+        {
+            _ = PinSelectedAsync();
+            e.Handled = true;
+        }
+
+        if (e.KeyCode == Keys.Delete)
+        {
+            _ = IgnoreSelectedAsync();
+            e.Handled = true;
+        }
     }
 
     private static bool Matches(FolderCandidate folder, string query)
@@ -263,16 +326,43 @@ internal sealed class PopupForm : Form
 
     private void ResizeColumns()
     {
-        if (folderList.Columns.Count < 4)
+        if (folderList.Columns.Count < 3)
         {
             return;
         }
 
         var availableWidth = Math.Max(480, folderList.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 8);
-        folderList.Columns[0].Width = Math.Max(160, (int)(availableWidth * 0.27));
-        folderList.Columns[2].Width = 70;
-        folderList.Columns[3].Width = 90;
-        folderList.Columns[1].Width = Math.Max(180, availableWidth - folderList.Columns[0].Width - folderList.Columns[2].Width - folderList.Columns[3].Width);
+        folderList.Columns[0].Width = Math.Max(170, (int)(availableWidth * 0.28));
+        folderList.Columns[2].Width = 110;
+        folderList.Columns[1].Width = Math.Max(220, availableWidth - folderList.Columns[0].Width - folderList.Columns[2].Width);
+    }
+
+    private static string GetReasonLabel(string reason)
+    {
+        return reason switch
+        {
+            "Explorer" => "Current",
+            "Next" => "Next",
+            "Related" => "Related",
+            "Pinned" => "Pinned",
+            "Recent" => "Recent",
+            "Frequent" => "Frequent",
+            _ => "Tracked",
+        };
+    }
+
+    private static string GetReasonTooltip(string reason)
+    {
+        return reason switch
+        {
+            "Explorer" => "Active folder detected from your current context",
+            "Next" => "Usually opened after your current context",
+            "Related" => "Related to your current context",
+            "Pinned" => "Pinned by you",
+            "Recent" => "Opened recently",
+            "Frequent" => "Opened often",
+            _ => "Tracked by FolderHeat",
+        };
     }
 
     private static void ConfigureButton(Button button, UiIconKind iconKind)

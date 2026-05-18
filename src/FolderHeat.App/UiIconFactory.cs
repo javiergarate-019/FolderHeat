@@ -2,6 +2,7 @@ namespace FolderHeat.App;
 
 internal enum UiIconKind
 {
+    Open,
     Add,
     Pin,
     Unpin,
@@ -36,6 +37,12 @@ internal static class UiIconFactory
 
         switch (kind)
         {
+            case UiIconKind.Open:
+                DrawFolder(graphics, pen, size);
+                graphics.DrawLine(accentPen, size * 0.48f, size * 0.56f, size * 0.84f, size * 0.56f);
+                graphics.DrawLine(accentPen, size * 0.68f, size * 0.38f, size * 0.84f, size * 0.56f);
+                graphics.DrawLine(accentPen, size * 0.68f, size * 0.74f, size * 0.84f, size * 0.56f);
+                break;
             case UiIconKind.Add:
                 DrawFolder(graphics, pen, size);
                 graphics.DrawLine(accentPen, size * 0.68f, size * 0.36f, size * 0.68f, size * 0.78f);
