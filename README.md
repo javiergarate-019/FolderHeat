@@ -1,24 +1,86 @@
 # FolderHeat
 
-FolderHeat is a lightweight Windows tray utility for launching the folders the user is most likely to need right now.
+FolderHeat is a lightweight Windows tray utility that keeps your most relevant folders one shortcut away.
 
-This implementation includes the v0.3 smart-context foundation:
+It is not a file manager and it is not an Explorer replacement. It is a smart folder launcher: press the hotkey, get a compact popup, and open the folder you probably need right now.
 
-- .NET 10 WinForms tray app.
-- Lightweight Clean Architecture projects.
-- SQLite persistence under `%LOCALAPPDATA%\FolderHeat\folderheat.db`.
-- Global hotkey: `Ctrl+Alt+Space`.
-- Popup with Active Now, Pinned, Recent, and Frequent groups.
+## Features
+
+- Tray utility for Windows.
+- Global hotkey, configurable from Settings.
+- Popup grouped by `Active Now`, `Pinned`, `Recent`, and `Frequent`.
+- Search by folder name or path.
 - Manual folder add.
-- Open folder tracking.
-- Pin/unpin support.
-- Ignore/restore support.
-- Active context from Explorer, VS Code, Notepad++, and Windows recent shortcuts.
-- Duplicate-free popup groups with rank reasons.
-- Related-folder and likely-next-folder boosts.
-- Configurable global hotkey.
+- Add current folder when FolderHeat can infer the active context.
+- Pin, unpin, ignore, and restore folders.
+- Smart context signals from Explorer, VS Code, Notepad, Notepad++, and Windows recent shortcuts.
+- Related-folder and likely-next-folder ranking.
+- Local SQLite storage under `%LOCALAPPDATA%\FolderHeat`.
+- Optional start with Windows.
+- About dialog with version, GitHub link, license, and diagnostics.
 
-## Projects
+## Install
+
+Download the latest portable ZIP from GitHub Releases:
+
+```text
+https://github.com/javiergarate/FolderHeat/releases
+```
+
+Extract the ZIP and run:
+
+```text
+FolderHeat.App.exe
+```
+
+FolderHeat runs in the system tray. The default shortcut is:
+
+```text
+Ctrl + Alt + Space
+```
+
+## Usage
+
+- Left-click the tray icon or press the hotkey to open the popup.
+- Type to filter folders.
+- Press `Enter` or click `Open` to open the selected folder.
+- Use `Pin` for folders that should stay easy to reach.
+- Use `Ignore` for noisy folders that should not appear.
+- Open Settings from the tray menu to change the shortcut or enable start with Windows.
+
+Popup reasons:
+
+- `Current`: detected from your active context.
+- `Next`: usually opened after your current context.
+- `Related`: related to the current folder context.
+- `Pinned`: pinned by you.
+- `Recent`: opened recently.
+- `Frequent`: opened often.
+- `Tracked`: known to FolderHeat, with no stronger signal yet.
+
+## Privacy
+
+FolderHeat stores its data locally.
+
+By default, the database is stored at:
+
+```text
+%LOCALAPPDATA%\FolderHeat\folderheat.db
+```
+
+No cloud service is used by the app.
+
+## Development
+
+FolderHeat uses:
+
+- C#
+- .NET 10
+- WinForms
+- SQLite
+- Lightweight Clean Architecture
+
+Project structure:
 
 ```text
 src/
@@ -32,34 +94,40 @@ tests/
   FolderHeat.Application.Tests
 ```
 
-## Build
+Build:
 
 ```powershell
 dotnet build FolderHeat.slnx
 ```
 
-Release builds generate a local portable ZIP under `artifacts/`.
-ZIP files are ignored by Git; publish them through GitHub Releases instead of committing them.
-
-## Release
-
-Push a version tag to create or update a GitHub Release with the portable ZIP attached:
-
-```powershell
-git tag v0.4
-git push origin v0.4
-```
-
-The release workflow builds `src\FolderHeat.App\FolderHeat.App.csproj -c Release` and uploads `artifacts/FolderHeat-portable-win-x64.zip` as the release asset.
-
-## Test
+Test:
 
 ```powershell
 dotnet test FolderHeat.slnx
 ```
 
-## Run
+Run from source:
 
 ```powershell
 dotnet run --project src\FolderHeat.App
 ```
+
+## Release
+
+Release builds generate a local portable ZIP under `artifacts/`.
+ZIP files are ignored by Git and should be published through GitHub Releases.
+
+To publish a version:
+
+```powershell
+dotnet build src\FolderHeat.App\FolderHeat.App.csproj -c Release
+git tag v0.7.0
+git push origin main
+git push origin v0.7.0
+```
+
+The GitHub Actions release workflow also builds the portable ZIP and attaches it to the release for pushed `v*` tags.
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
