@@ -50,6 +50,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(CreateMenuItem("Add folder...", UiIconKind.Add, async (_, _) => await AddFolderAsync()));
         menu.Items.Add(CreateMenuItem("Ignored folders...", UiIconKind.Ignore, (_, _) => ShowIgnoredFolders()));
         menu.Items.Add(CreateMenuItem("Settings...", UiIconKind.Settings, (_, _) => ShowSettings()));
+        menu.Items.Add(CreateMenuItem("About FolderHeat...", UiIconKind.About, (_, _) => ShowAbout()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
         return menu;
@@ -124,6 +125,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
         hotkey.Dispose();
         hotkey = RegisterHotkey(hotkeySettings);
         notifyIcon.Text = $"FolderHeat ({hotkeySettings.DisplayText})";
+    }
+
+    private static void ShowAbout()
+    {
+        using var form = new AboutForm();
+        form.ShowNearCursor();
     }
 
     private GlobalHotkey RegisterHotkey(HotkeySettings settings)

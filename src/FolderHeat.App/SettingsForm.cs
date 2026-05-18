@@ -13,12 +13,13 @@ internal sealed class SettingsForm : Form
     {
         Text = "FolderHeat settings";
         Icon = AppIcons.FolderHeat;
-        Width = 360;
-        Height = 260;
+        Width = 420;
+        Height = 320;
         StartPosition = FormStartPosition.CenterScreen;
         MinimizeBox = false;
         MaximizeBox = false;
         FormBorderStyle = FormBorderStyle.FixedDialog;
+        Padding = new Padding(10);
 
         ctrlBox = new CheckBox { Text = "Ctrl", Checked = settings.Modifiers.HasFlag(HotkeyModifiers.Control), AutoSize = true };
         altBox = new CheckBox { Text = "Alt", Checked = settings.Modifiers.HasFlag(HotkeyModifiers.Alt), AutoSize = true };
@@ -50,38 +51,68 @@ internal sealed class SettingsForm : Form
 
         var modifierPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Top,
-            Height = 34,
-            Padding = new Padding(8, 4, 8, 4),
+            Dock = DockStyle.Fill,
+            AutoSize = true,
+            Padding = new Padding(0, 2, 0, 0),
         };
         modifierPanel.Controls.Add(ctrlBox);
         modifierPanel.Controls.Add(altBox);
         modifierPanel.Controls.Add(shiftBox);
         modifierPanel.Controls.Add(winBox);
 
-        var keyPanel = new FlowLayoutPanel
+        var shortcutLayout = new TableLayoutPanel
         {
-            Dock = DockStyle.Top,
-            Height = 42,
-            Padding = new Padding(8),
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 2,
+            Padding = new Padding(10, 8, 10, 8),
         };
-        keyPanel.Controls.Add(new Label { Text = "Key", AutoSize = true, Padding = new Padding(0, 6, 8, 0) });
-        keyPanel.Controls.Add(keyBox);
+        shortcutLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));
+        shortcutLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        shortcutLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        shortcutLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+        shortcutLayout.Controls.Add(new Label { Text = "Modifiers", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
+        shortcutLayout.Controls.Add(modifierPanel, 1, 0);
+        shortcutLayout.Controls.Add(new Label { Text = "Key", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+        shortcutLayout.Controls.Add(keyBox, 1, 1);
+
+        var shortcutGroup = new GroupBox
+        {
+            Text = "Shortcut",
+            Dock = DockStyle.Top,
+            Height = 104,
+            Padding = new Padding(6),
+        };
+        shortcutGroup.Controls.Add(shortcutLayout);
 
         startWithWindowsBox = new CheckBox
         {
             Text = "Start FolderHeat with Windows",
             Checked = startWithWindows,
-            AutoSize = true,
+            Dock = DockStyle.Fill,
+            AutoSize = false,
+            TextAlign = ContentAlignment.MiddleLeft,
         };
 
-        var startupPanel = new FlowLayoutPanel
+        var startupLayout = new TableLayoutPanel
         {
-            Dock = DockStyle.Top,
-            Height = 38,
-            Padding = new Padding(8, 4, 8, 4),
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 1,
+            Padding = new Padding(10, 8, 10, 8),
         };
-        startupPanel.Controls.Add(startWithWindowsBox);
+        startupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        startupLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        startupLayout.Controls.Add(startWithWindowsBox, 0, 0);
+
+        var startupGroup = new GroupBox
+        {
+            Text = "Startup",
+            Dock = DockStyle.Top,
+            Height = 82,
+            Padding = new Padding(6),
+        };
+        startupGroup.Controls.Add(startupLayout);
 
         var saveButton = new Button
         {
@@ -121,15 +152,14 @@ internal sealed class SettingsForm : Form
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
             Height = 42,
-            Padding = new Padding(8),
+            Padding = new Padding(0, 8, 0, 0),
         };
         bottomPanel.Controls.Add(saveButton);
         bottomPanel.Controls.Add(cancelButton);
 
         Controls.Add(bottomPanel);
-        Controls.Add(startupPanel);
-        Controls.Add(keyPanel);
-        Controls.Add(modifierPanel);
+        Controls.Add(startupGroup);
+        Controls.Add(shortcutGroup);
 
         AcceptButton = saveButton;
         CancelButton = cancelButton;

@@ -9,6 +9,7 @@ internal enum UiIconKind
     Ignore,
     Restore,
     Settings,
+    About,
 }
 
 internal static class UiIconFactory
@@ -82,6 +83,11 @@ internal static class UiIconFactory
                     graphics.DrawLine(pen, x1, y1, x2, y2);
                 }
                 graphics.DrawEllipse(pen, size * 0.28f, size * 0.28f, size * 0.44f, size * 0.44f);
+                break;
+            case UiIconKind.About:
+                graphics.DrawEllipse(pen, size * 0.18f, size * 0.18f, size * 0.64f, size * 0.64f);
+                graphics.FillEllipse(accentBrush, size * 0.44f, size * 0.26f, size * 0.12f, size * 0.12f);
+                graphics.DrawLine(accentPen, size * 0.5f, size * 0.48f, size * 0.5f, size * 0.72f);
                 break;
         }
 
