@@ -6,6 +6,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 {
     private readonly FolderCatalogService catalog;
     private readonly AppSettingsStore settingsStore;
+    private readonly WindowsStartupRegistration startupRegistration = new();
     private readonly NotifyIcon notifyIcon;
     private GlobalHotkey hotkey;
     private PopupForm? popup;
@@ -111,7 +112,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     private void ShowSettings()
     {
-        using var form = new SettingsForm(hotkeySettings);
+        using var form = new SettingsForm(hotkeySettings, startupRegistration.IsEnabled());
         if (form.ShowDialog() != DialogResult.OK)
         {
             return;
@@ -119,6 +120,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         hotkeySettings = form.SelectedHotkey;
         settingsStore.SaveHotkey(hotkeySettings);
+        startupRegistration.SetEnabled(form.StartWithWindows);
         hotkey.Dispose();
         hotkey = RegisterHotkey(hotkeySettings);
         notifyIcon.Text = $"FolderHeat ({hotkeySettings.DisplayText})";

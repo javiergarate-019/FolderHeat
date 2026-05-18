@@ -1,0 +1,42 @@
+name: Release portable package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build portable ZIP
+        shell: pwsh
+        run: dotnet build src\FolderHeat.App\FolderHeat.App.csproj -c Release
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $asset = "artifacts/FolderHeat-portable-win-x64.zip"
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $asset --clobber
+          }
+          else {
+            gh release create $tag $asset --title $tag --generate-notes
+          }

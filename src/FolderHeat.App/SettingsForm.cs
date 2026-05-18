@@ -6,14 +6,15 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox altBox;
     private readonly CheckBox shiftBox;
     private readonly CheckBox winBox;
+    private readonly CheckBox startWithWindowsBox;
     private readonly ComboBox keyBox;
 
-    public SettingsForm(HotkeySettings settings)
+    public SettingsForm(HotkeySettings settings, bool startWithWindows)
     {
         Text = "FolderHeat settings";
         Icon = AppIcons.FolderHeat;
         Width = 360;
-        Height = 220;
+        Height = 260;
         StartPosition = FormStartPosition.CenterScreen;
         MinimizeBox = false;
         MaximizeBox = false;
@@ -67,6 +68,21 @@ internal sealed class SettingsForm : Form
         keyPanel.Controls.Add(new Label { Text = "Key", AutoSize = true, Padding = new Padding(0, 6, 8, 0) });
         keyPanel.Controls.Add(keyBox);
 
+        startWithWindowsBox = new CheckBox
+        {
+            Text = "Start FolderHeat with Windows",
+            Checked = startWithWindows,
+            AutoSize = true,
+        };
+
+        var startupPanel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 38,
+            Padding = new Padding(8, 4, 8, 4),
+        };
+        startupPanel.Controls.Add(startWithWindowsBox);
+
         var saveButton = new Button
         {
             Text = "Save",
@@ -88,6 +104,7 @@ internal sealed class SettingsForm : Form
             }
 
             SelectedHotkey = BuildHotkey();
+            StartWithWindows = startWithWindowsBox.Checked;
             Close();
         };
 
@@ -110,15 +127,19 @@ internal sealed class SettingsForm : Form
         bottomPanel.Controls.Add(cancelButton);
 
         Controls.Add(bottomPanel);
+        Controls.Add(startupPanel);
         Controls.Add(keyPanel);
         Controls.Add(modifierPanel);
 
         AcceptButton = saveButton;
         CancelButton = cancelButton;
         SelectedHotkey = settings;
+        StartWithWindows = startWithWindows;
     }
 
     public HotkeySettings SelectedHotkey { get; private set; }
+
+    public bool StartWithWindows { get; private set; }
 
     private HotkeySettings BuildHotkey()
     {

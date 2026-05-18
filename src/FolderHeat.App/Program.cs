@@ -5,9 +5,17 @@ namespace FolderHeat.App;
 
 static class Program
 {
+    private const string SingleInstanceMutexName = @"Local\FolderHeat.SingleInstance";
+
     [STAThread]
     static void Main()
     {
+        using var singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out var ownsMutex);
+        if (!ownsMutex)
+        {
+            return;
+        }
+
         ApplicationConfiguration.Initialize();
 
         var repository = new SqliteFolderRepository(AppPaths.DatabasePath);
@@ -20,6 +28,7 @@ static class Program
             new CompositeActiveFolderSource(
                 new ExplorerActiveFolderSource(),
                 new VsCodeActiveFolderSource(),
+                new NotepadActiveFolderSource(),
                 new NotepadPlusPlusActiveFolderSource(),
                 new WindowsRecentFolderSource()));
 

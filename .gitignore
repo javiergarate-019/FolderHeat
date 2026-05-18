@@ -17,6 +17,12 @@ coverage/
 *.log
 
 artifacts/publish/
+artifacts/*.zip
 
 # Local AI agent instructions
 Agents.md
+
+# Local checkpoints
+CHECKPOINT.local.md
+restore-diag.local.log
+.dotnet-home/

@@ -18,7 +18,7 @@ internal sealed class PopupForm : Form
         Text = "FolderHeat";
         Icon = AppIcons.FolderHeat;
         Width = 760;
-        Height = 520;
+        Height = 650;
         MinimumSize = new Size(560, 360);
         StartPosition = FormStartPosition.Manual;
         FormBorderStyle = FormBorderStyle.Sizable;
@@ -43,6 +43,7 @@ internal sealed class PopupForm : Form
             FullRowSelect = true,
             HideSelection = false,
             MultiSelect = false,
+            ShowItemToolTips = true,
         };
         folderList.Columns.Add("Folder", 190);
         folderList.Columns.Add("Path", 360);
@@ -142,6 +143,7 @@ internal sealed class PopupForm : Form
                 var item = new ListViewItem(folder.Name, listGroup)
                 {
                     Tag = folder,
+                    ToolTipText = folder.Path,
                 };
                 item.SubItems.Add(folder.Path);
                 item.SubItems.Add(Math.Round(folder.Heat).ToString());
